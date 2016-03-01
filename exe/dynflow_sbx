@@ -1,3 +1,17 @@
 #!/usr/bin/env ruby
 
 require "dynflow_sbx"
+
+module DynflowSbx
+  class << self
+    def main
+      #DynHelper.world.trigger(Actions::SumManyNumbers, (1..100).to_a)
+      DynHelper.world.trigger Actions::BasicAction
+      DynHelper.run_web_console
+    end
+  end
+end
+
+if $0 == __FILE__
+  DynflowSbx::main
+end

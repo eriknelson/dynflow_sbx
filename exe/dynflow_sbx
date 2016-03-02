@@ -5,8 +5,7 @@ require "dynflow_sbx"
 module DynflowSbx
   class << self
     def main
-      #DynHelper.world.trigger(Actions::SumManyNumbers, (1..100).to_a)
-      DynHelper.world.trigger Actions::BasicAction
+      DynHelper.world.trigger Actions::SubplanDemo
       DynHelper.run_web_console
     end
   end

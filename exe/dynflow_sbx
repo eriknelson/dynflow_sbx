@@ -5,7 +5,7 @@ require "dynflow_sbx"
 module DynflowSbx
   class << self
     def main
-      DynHelper.world.trigger Actions::ExternalActionPlanner
+      DynHelper.world.trigger Actions::MultiExternalActionPlanner
       DynHelper.run_web_console
     end
   end

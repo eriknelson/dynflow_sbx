@@ -12,7 +12,7 @@ module DynflowSbx
         sequence do
           plan_action BarChildAction, "pre-foo"
 
-          plan_action ExternalFooChildAction, [24, 25, 26]
+          plan_action ExternalFooChildAction, ['24', '25', '26']
 
           plan_action BarChildAction, "post-foo"
         end
@@ -26,14 +26,11 @@ module DynflowSbx
         plan_self worker_ids: worker_ids
       end
       def run(event = nil)
+        worker_ids = input[:worker_ids]
 
         case event
         when nil # First run
           DynHelper.nsklog.debug "ExternalFooChildAction:: first run"
-          worker_ids = input[:worker_ids]
-
-          DynHelper.nsklog.debug "ids: #{worker_ids}"
-          DynHelper.nsklog.debug "Database: #{Database}"
 
           # Build worker manifest to track what work has completed
           worker_ids.each do |worker_id|
@@ -46,7 +43,6 @@ module DynflowSbx
             worker_ids.each do |worker_id|
               external_worker = MockExternalWorker.new
               Database[worker_id.to_s][:worker] = external_worker
-              #external_worker.invoke(invoker, worker_id, rand(6))
               external_worker.invoke(world, {
                 sleepytime: rand(6),
                 worker_id: worker_id,
@@ -56,22 +52,27 @@ module DynflowSbx
             end
           end
         when Hash
-          DynHelper.nsklog.debug "ExternalFooChildAction:: Woke up, got event!"
           # Worker is reporting. Need to log the status update to the manifest
           # and then determine if we need to go back to sleep or we're done with
           # all outstanding work
           completed_worker_id = event.fetch(:worker_id).to_s
-          Database[completed_worker_id][:completed] = true
+          DynHelper.nsklog.debug "Got completed worker id: #{completed_worker_id}"
+
+          if output.key?(:completed_workers)
+            output[:completed_workers] << completed_worker_id
+          else
+            output[:completed_workers] = [completed_worker_id]
+          end
 
           # If all the workers have finished, we're done here, otherwise, go
-          # back to sleep. Make sure to alert the outstanding workers up
+          # back to sleep. Make sure to alert the outstanding workers of
           # new suspension handles
-          result = Database.values.reduce{|memo, completed| memo && completed}
+          outstanding_worker_ids = worker_ids - output[:completed_workers]
 
-          unless result
+          unless outstanding_worker_ids.length == 0
             suspend do |suspended_action|
-              Database.values.select{|wm| !wm[:completed]}.each do |wm|
-                wm[:worker].update_suspension(
+              outstanding_worker_ids.each do |id|
+                Database[id][:worker].update_suspension(
                   suspended_action.execution_plan_id,
                   suspended_action.step_id,
                 )

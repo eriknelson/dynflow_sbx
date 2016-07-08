@@ -48,8 +48,8 @@ module DynflowSbx
 
     class BarChildAction < Base
       def plan(foo_in)
-        DynHelper.nsklog.debug "BarChildAction::plan"
-        DynHelper.nsklog.debug "input: #{foo_in}"
+        #DynHelper.nsklog.debug "BarChildAction::plan"
+        #DynHelper.nsklog.debug "input: #{foo_in}"
         plan_self foo: foo_in
       end
       def run

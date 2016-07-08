@@ -52,7 +52,7 @@ module DynflowSbx
         dynflow_console = Dynflow::Web.setup do
           set :world, world
         end
-        Rack::Server.new(:app => dynflow_console, :Port => 4567).start
+        Rack::Server.new(:app => dynflow_console, :Port => 4567, :Host => "0.0.0.0").start
       end
 
       def terminate

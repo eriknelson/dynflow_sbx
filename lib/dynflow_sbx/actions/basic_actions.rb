@@ -15,9 +15,9 @@ module DynflowSbx
         sequence do
           foo_action = plan_action(FooChildAction)
           concurrence do
-            plan_action BarChildAction, foo_action.output[:foo]
-            plan_action BarChildAction, foo_action.output[:foo]
-            plan_action BarChildAction, foo_action.output[:foo]
+            plan_action BarChildAction, foo_action.output[:password]
+            plan_action BarChildAction, foo_action.output[:password]
+            plan_action BarChildAction, foo_action.output[:password]
           end
         end
       end
@@ -39,23 +39,31 @@ module DynflowSbx
       end
       def run
         DynHelper.nsklog.debug "FooChildAction::run"
-        output[:foo] = "foo"
+        output[:password] = "hunter2"
       end
       def finalize
         DynHelper.nsklog.debug "FooChildAction::finalize"
       end
     end
 
+    class ScrubPasswordMiddleware < ::Dynflow::Middleware
+      def present
+        DynHelper.nsklog.debug "Scrubbing Middleware!"
+        action.input[:password] = '** INPUT TOP SECRET **'
+        action.output[:password] = '** OUTPUT TOP SECRET **'
+      end
+    end
+
     class BarChildAction < Base
-      def plan(foo_in)
-        #DynHelper.nsklog.debug "BarChildAction::plan"
-        #DynHelper.nsklog.debug "input: #{foo_in}"
-        plan_self foo: foo_in
+      middleware.use ScrubPasswordMiddleware
+
+      def plan(password)
+        plan_self password: password
       end
       def run
         DynHelper.nsklog.debug "BarChildAction::run"
-        DynHelper.nsklog.debug "[:foo] input -> #{input[:foo]}"
-        output[:bar] = input[:foo] + "::bar"
+        DynHelper.nsklog.debug "internal password -> #{input[:password]}"
+        output[:password] = input[:password]
       end
       def finalize
         DynHelper.nsklog.debug "BarChildAction::finalize"
